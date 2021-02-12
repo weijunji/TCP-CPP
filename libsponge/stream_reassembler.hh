@@ -5,15 +5,37 @@
 
 #include <cstdint>
 #include <string>
+#include <set>
+
+struct Segment {
+  const std::string data;
+  const size_t start;
+  const size_t end; // [start, end)
+
+  Segment(const std::string& _data, const size_t index) : data(_data), start(index), end(index + data.length()) {}
+  bool operator<(const Segment& rhs) const {
+    if(start == rhs.start) return end >= rhs.end;
+    else return start < rhs.start;
+  }
+
+  bool operator==(const Segment& rhs) const {
+    return start == rhs.start && end == rhs.end;
+  }
+};
 
 //! \brief A class that assembles a series of excerpts from a byte stream (possibly out of order,
 //! possibly overlapping) into an in-order byte stream.
 class StreamReassembler {
-  private:
+  public:
     // Your code here -- add private members as necessary.
 
     ByteStream _output;  //!< The reassembled in-order byte stream
     size_t _capacity;    //!< The maximum number of bytes
+
+    size_t _expect = 0; //!< The next expected byte index
+    size_t _unassembled = 0; //!< The number of unassembled bytes
+    std::set<Segment> _set; //!< Set store the unassembled bytes
+    bool _eof = false;
 
   public:
     //! \brief Construct a `StreamReassembler` that will store up to `capacity` bytes.
