@@ -160,7 +160,7 @@ void StreamReassembler::push_substring(const string& data, const size_t index, c
             _unassembled -= it->data.length();
             it = _set.erase(it);
         }
-        else if (_output.remaining_capacity() != 0) {
+        else {
             // 可以写
             size_t offset = _expect - it->start;
             size_t wrote = _output.write(it->data.substr(offset));
@@ -172,9 +172,6 @@ void StreamReassembler::push_substring(const string& data, const size_t index, c
                 push_set(s, _expect);
             }
             _set.erase(it);
-            break;
-        }
-        else {
             break;
         }
     }
