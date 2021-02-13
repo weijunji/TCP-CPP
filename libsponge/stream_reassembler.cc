@@ -14,6 +14,17 @@ using namespace std;
 
 StreamReassembler::StreamReassembler(const size_t capacity) : _output(capacity), _capacity(capacity), _set() {}
 
+void StreamReassembler::push_set(const std::string s, const size_t index) {
+    size_t remain = _capacity - _unassembled - _output.buffer_size();
+    if (s.length() > remain) {
+        _unassembled += remain;
+        _set.insert(Segment(s.substr(0, remain), index));
+    } else {
+        _unassembled += s.length();
+        _set.insert(Segment(s, index));
+    }
+}
+
 //! \details This function accepts a substring (aka a segment) of bytes,
 //! possibly out-of-order, from the logical stream, and assembles any newly
 //! contiguous substrings and writes them into the output stream in order.
@@ -71,15 +82,13 @@ void StreamReassembler::push_substring(const string& data, const size_t index, c
                     // 判断前面一个 it->start < seg.start
                     if (it->end < index) {
                         // 合并不了
-                        _unassembled += s.length();
-                        _set.insert(Segment(s, start));
+                        push_set(s, start);
                     }
                     else {
                         // it->end >= s
                         if (it->end < index + s.length()) {
                             s = it->data.substr(0, index - it->start) + s;
-                            _unassembled += s.length();
-                            _set.insert(Segment(s, it->start));
+                            push_set(s, it->start);
                             _unassembled -= it->data.length();
                             _set.erase(it);
                         }
@@ -87,8 +96,7 @@ void StreamReassembler::push_substring(const string& data, const size_t index, c
                 }
                 else {
                     // 前面没有了，直接插入
-                    _unassembled += s.length();
-                    _set.insert(Segment(s, index));
+                    push_set(s, index);
                 }
             }
             else {
@@ -105,12 +113,10 @@ void StreamReassembler::push_substring(const string& data, const size_t index, c
                         string s = seg.data + it->data.substr(seg.end - it->start);
                         _unassembled -= it->data.length();
                         _set.erase(it);
-                        _unassembled += s.length();
-                        _set.insert(Segment(s, index));
+                        push_set(s, index);
                     }
                     else {
-                        _unassembled += data_.length();
-                        _set.insert(seg);
+                        push_set(data_, index);
                     }
                 }
                 else {
@@ -127,15 +133,13 @@ void StreamReassembler::push_substring(const string& data, const size_t index, c
                 // 判断前面一个 it->start < seg.start
                 if (it->end < index) {
                     // 合并不了
-                    _unassembled += s.length();
-                    _set.insert(Segment(s, index));
+                    push_set(s, index);
                 }
                 else {
                     // it->end >= s
                     if (it->end < index + s.length()) {
                         s = it->data.substr(0, index - it->start) + s;
-                        _unassembled += s.length();
-                        _set.insert(Segment(s, it->start));
+                        push_set(s, it->start);
                         _unassembled -= it->data.length();
                         _set.erase(it);
                     }
@@ -143,8 +147,7 @@ void StreamReassembler::push_substring(const string& data, const size_t index, c
             }
             else {
                 // 前面没有了，直接插入
-                _unassembled += s.length();
-                _set.insert(Segment(s, index));
+                push_set(s, index);
             }
         }
     }
@@ -163,11 +166,10 @@ void StreamReassembler::push_substring(const string& data, const size_t index, c
             size_t wrote = _output.write(it->data.substr(offset));
             size_t need = it->data.length();
             _expect += wrote;
-            _unassembled -= need;
+            _unassembled -= wrote;
             if ((offset + wrote) != need) {
                 string s = it->data.substr(offset + wrote);
-                _unassembled += s.length();
-                _set.insert(Segment(s, _expect));
+                push_set(s, _expect);
             }
             _set.erase(it);
             break;
