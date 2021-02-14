@@ -28,6 +28,8 @@ int main() {
 
         // overlapping segments
         for (unsigned rep_no = 0; rep_no < NREPS; ++rep_no) {
+            cerr << "---------------------------" << endl;
+            cerr << "{ len, off }" << endl;
             StreamReassembler buf{NSEGS * MAX_SEG_LEN};
 
             vector<tuple<size_t, size_t>> seq_size;
@@ -45,6 +47,7 @@ int main() {
 
             for (auto [off, sz] : seq_size) {
                 string dd(d.cbegin() + off, d.cbegin() + off + sz);
+                cerr << "{ " << d.length() << ", " << off << " }" << endl;
                 buf.push_substring(move(dd), off, off + sz == offset);
             }
 
