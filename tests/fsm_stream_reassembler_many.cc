@@ -28,6 +28,8 @@ int main() {
 
         // buffer a bunch of bytes, make sure we can empty and re-fill before calling close()
         for (unsigned rep_no = 0; rep_no < NREPS; ++rep_no) {
+            cerr << "---------------------------" << endl;
+            cerr << "{ len, off }" << endl;
             StreamReassembler buf{MAX_SEG_LEN * NSEGS};
 
             vector<tuple<size_t, size_t>> seq_size;
@@ -44,10 +46,12 @@ int main() {
 
             for (auto [off, sz] : seq_size) {
                 string dd(d.cbegin() + off, d.cbegin() + off + sz);
+                cerr << "{ " << dd.length() << ", " << off << " }," << endl;
                 buf.push_substring(move(dd), off, off + sz == offset);
             }
 
             auto result = read(buf);
+            cerr << "result: " << buf.stream_out().bytes_written() << " expect:" << offset << endl;
             if (buf.stream_out().bytes_written() != offset) {  // read bytes
                 throw runtime_error("test 1 - number of bytes RX is incorrect");
             }

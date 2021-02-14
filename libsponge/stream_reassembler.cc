@@ -19,7 +19,8 @@ void StreamReassembler::push_set(const std::string s, const size_t index) {
     if (s.length() > remain) {
         _unassembled += remain;
         _set.insert(Segment(s.substr(0, remain), index));
-    } else {
+    }
+    else {
         _unassembled += s.length();
         _set.insert(Segment(s, index));
     }
@@ -94,8 +95,8 @@ void StreamReassembler::push_substring(const string& data, const size_t index, c
                         // it->end >= s
                         if (it->end < index + s.length()) {
                             s = it->data.substr(0, index - it->start) + s;
-                            push_set(s, it->start);
                             _unassembled -= it->data.length();
+                            push_set(s, it->start);
                             _set.erase(it);
                         }
                     }
@@ -145,8 +146,8 @@ void StreamReassembler::push_substring(const string& data, const size_t index, c
                     // it->end >= s
                     if (it->end < index + s.length()) {
                         s = it->data.substr(0, index - it->start) + s;
-                        push_set(s, it->start);
                         _unassembled -= it->data.length();
+                        push_set(s, it->start);
                         _set.erase(it);
                     }
                 }

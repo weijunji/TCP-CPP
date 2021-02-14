@@ -47,11 +47,12 @@ int main() {
 
             for (auto [off, sz] : seq_size) {
                 string dd(d.cbegin() + off, d.cbegin() + off + sz);
-                cerr << "{ " << d.length() << ", " << off << " }" << endl;
+                cerr << "{ " << dd.length() << ", " << off << " }," << endl;
                 buf.push_substring(move(dd), off, off + sz == offset);
             }
 
             auto result = read(buf);
+            cerr << "result: " << buf.stream_out().bytes_written() << " expect:" << offset << endl;
             if (buf.stream_out().bytes_written() != offset) {  // read bytes
                 throw runtime_error("test 2 - number of RX bytes is incorrect");
             }
