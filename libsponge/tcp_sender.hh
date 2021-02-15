@@ -53,6 +53,7 @@ class TCPSender {
     uint32_t _do_back_off{1};
     
     bool _fin_sent{false};
+    bool _syn_sent{false};
 
   public:
     //! Initialize a TCPSender

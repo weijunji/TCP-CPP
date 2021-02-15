@@ -6,9 +6,6 @@
 // For Lab 2, please replace with a real implementation that passes the
 // automated checks run by `make check_lab2`.
 
-template <typename... Targs>
-void DUMMY_CODE(Targs &&... /* unused */) {}
-
 using namespace std;
 
 void TCPReceiver::segment_received(const TCPSegment &seg) {
@@ -23,9 +20,11 @@ void TCPReceiver::segment_received(const TCPSegment &seg) {
 
     bool eof = seg.header().fin;
     std::string&& payload = std::string(seg.payload().str());
+    if (seg.header().seqno == _isn.value() - 1 && !seg.header().syn && _reassembler.expect() < 0x0000ffff) {
+        // wrong packet seqno == isn
+        return;
+    }
     uint64_t index = unwrap(seg.header().seqno + (seg.header().syn ? 1 : 0), _isn.value(), _reassembler.expect());
-    std::cerr << "Isn " << _isn.value() << " seq " << seg.header().seqno << std::endl;
-    std::cerr << "Recv " << payload << " at " << index << " expect " << _reassembler.expect() << std::endl;
     _reassembler.push_substring(payload, index, eof);
 }
 

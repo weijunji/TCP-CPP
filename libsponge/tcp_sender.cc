@@ -11,9 +11,6 @@
 // For Lab 3, please replace with a real implementation that passes the
 // automated checks run by `make check_lab3`.
 
-template <typename... Targs>
-void DUMMY_CODE(Targs &&... /* unused */) {}
-
 using namespace std;
 
 //! \param[in] capacity the capacity of the outgoing byte stream
@@ -22,22 +19,23 @@ using namespace std;
 TCPSender::TCPSender(const size_t capacity, const uint16_t retx_timeout, const std::optional<WrappingInt32> fixed_isn)
     : _isn(fixed_isn.value_or(WrappingInt32{random_device()()}))
     , _initial_retransmission_timeout{retx_timeout}
-    , _stream(capacity) {
-    // send SYN
-    TCPSegment seg;
-    seg.header().syn = true;
-    seg.header().seqno = wrap(0, _isn);
-    _segments_out.push(seg);
-    _seg_not_ack.push(seg);
-    _next_seqno = 1;
-    _retrans_timer = _initial_retransmission_timeout;
-}
+    , _stream(capacity) { }
 
 uint64_t TCPSender::bytes_in_flight() const {
     return _next_seqno - _expect_ack;
 }
 
 void TCPSender::fill_window() {
+    if (!_syn_sent) {
+        TCPSegment seg;
+        seg.header().syn = true;
+        seg.header().seqno = wrap(0, _isn);
+        _segments_out.push(seg);
+        _seg_not_ack.push(seg);
+        _next_seqno = 1;
+        _retrans_timer = _tick + _initial_retransmission_timeout;
+        _syn_sent = true;
+    }
     uint64_t remain = _window_size - bytes_in_flight();
     bool send = false;
     if (_expect_ack != 0) {
@@ -123,7 +121,7 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
 
     // faster retransmit
     if (_same_ack == 3 && !_seg_not_ack.empty()) {
-        cout << "!! FASTER RETRANSMIT" << endl;
+        // cout << "!! FASTER RETRANSMIT" << endl;
         _same_ack = 0;
         TCPSegment seg = _seg_not_ack.front();
         _segments_out.push(seg);
@@ -139,14 +137,19 @@ void TCPSender::tick(const size_t ms_since_last_tick) {
     
     if (!_seg_not_ack.empty() && _tick >= _retrans_timer) {
         // retransmit the first packet
+        // cout << "retransmit" << endl;
         TCPSegment seg = _seg_not_ack.front();
         _segments_out.push(seg);
         _consecutive_retransmissions += 1;
         _rto_back_off += _do_back_off;
-        _retrans_timer += _initial_retransmission_timeout << _rto_back_off;
+        _retrans_timer = _tick + (_initial_retransmission_timeout << _rto_back_off);
     }
 }
 
 unsigned int TCPSender::consecutive_retransmissions() const { return _consecutive_retransmissions; }
 
-void TCPSender::send_empty_segment() {}
+void TCPSender::send_empty_segment() {
+    TCPSegment seg;
+    seg.header().seqno = wrap(_next_seqno, _isn);
+    _segments_out.push(seg);
+}

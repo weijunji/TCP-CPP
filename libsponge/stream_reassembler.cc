@@ -7,15 +7,15 @@
 
 // You will need to add private members to the class declaration in `stream_reassembler.hh`
 
-template <typename... Targs>
-void DUMMY_CODE(Targs &&... /* unused */) {}
-
 using namespace std;
 
 StreamReassembler::StreamReassembler(const size_t capacity) : _output(capacity), _capacity(capacity), _set() {}
 
 void StreamReassembler::push_set(const std::string s, const size_t index) {
-    size_t remain = _capacity - _unassembled - _output.buffer_size();
+    // size_t remain = _capacity - _unassembled - _output.buffer_size();
+    size_t right = _expect + _capacity - _output.buffer_size();
+    size_t remain = right - index;
+    if (remain <= 0) return;
     if (s.length() > remain) {
         _unassembled += remain;
         _set.insert(Segment(s.substr(0, remain), index));
