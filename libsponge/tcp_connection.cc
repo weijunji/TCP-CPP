@@ -133,7 +133,10 @@ void TCPConnection::connect() {
     if (!_syn_sent) {
         _sender.fill_window();
         _syn_sent = true;
-        _segments_out.push(_sender.segments_out().front());
+        TCPSegment& seg = _sender.segments_out().front();
+        size_t max_win = numeric_limits<uint16_t>().max();
+        seg.header().win = min(_receiver.window_size(), max_win);
+        _segments_out.push(seg);
         _sender.segments_out().pop();
     }
 }
