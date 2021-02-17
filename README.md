@@ -10,9 +10,10 @@
 - [x] lab3
 - [x] lab4
 - [x] lab5
-- [ ] lab6
+- [x] lab6
 
 ## 学习笔记
 * [学习（1）](https://juejin.cn/post/6927851725810302990)
 * [学习（2）TCP协议实现](https://juejin.cn/post/6929693406528536583)
 * [学习（3）ARP协议](https://juejin.cn/post/6929778556298313735)
+* [学习（4）IP路由](https://juejin.cn/post/6930033317307744264)
